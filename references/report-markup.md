@@ -54,7 +54,7 @@ bar, and the comment/triage widgets. The template JS injects a triage+comment wi
 `{{IMG:name}}` resolves to `shots/name.jpeg` (or a data URI with `--inline`). Pin coordinates are
 percentages of the image box — read the screenshot first and estimate from what you see.
 
-## Current → After fix
+## Current → After fix — REQUIRED on every finding card
 
 ```html
 <div class="ba">
@@ -62,7 +62,9 @@ percentages of the image box — read the screenshot first and estimate from wha
   <div class="panel aft"><div class="phead">After fix</div><div class="pbody"> … </div></div>
 </div>
 ```
-Panel bodies take mock UI, flow diagrams, `<ul>` bullets, or `<pre>` code — pick per finding:
+Every `.find` card ships one of these (or an equivalent screenshot-anchored exhibit) — a card
+that is only prose is not done. Panel bodies take mock UI, flow diagrams, `<ul>` bullets, or
+`<pre>` code — pick per finding:
 screenshots prove *current*; mocks show *after*; flows explain multi-step behavior; code diffs suit
 one-liner fixes.
 

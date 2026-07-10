@@ -80,6 +80,12 @@ widget from that attribute), pick evidence per finding (screenshot with pins / c
 mock / flow diagram / code diff). Synthesis quality is the value — dedupe across finders, merge
 overlapping findings, don't ship 85 raw cards when 30 well-grouped ones read better.
 
+**Every card gets a Current → After exhibit — no text-only cards, ever.** Even compact cards
+carry at least a two-panel `ba` block (minimal mock, two-row flow, or a short code diff);
+prose alone is not a finding card. Ground each exhibit in the actual code (read the cited
+files first) — a mock that misquotes the app's real copy is worse than none. When authoring
+at volume, fan the exhibit-writing out to parallel agents per section.
+
 **Subject-app fidelity:** if the audited project has a design system (DESIGN.md / tokens),
 mocks depicting its UI follow THEIR system — set `meta.json` `"app": { "accent", "accentInk" }`
 from their tokens and mirror their real chrome in mock copy/structure (see the skill's

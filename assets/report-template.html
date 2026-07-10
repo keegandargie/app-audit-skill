@@ -243,6 +243,9 @@
   .cw .cw-saved-chip{display:none;align-items:center;gap:5px;font-size:11.5px;font-weight:620;color:var(--moss);background:var(--moss-tint);border-radius:99px;padding:2px 10px}
   .cw .cw-saved-chip::before{content:"✓"}
   .cw[data-saved="1"] .cw-saved-chip{display:inline-flex;animation:aa-stamp .18s var(--ease)}
+  .cw .cw-sugg-chip{display:none;align-items:center;gap:5px;font-size:11.5px;font-weight:620;color:var(--slate);background:var(--slate-tint);border-radius:99px;padding:2px 10px}
+  .cw[data-suggested="1"][data-saved="0"] .cw-sugg-chip{display:inline-flex}
+  .cw[data-suggested="1"][data-saved="0"] .cw-triage button[aria-pressed="true"]{background:var(--slate);color:var(--bg)}
   @keyframes aa-stamp{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
   .cw .cw-triage{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:10px;flex-wrap:wrap;background:var(--bg)}
   .cw .cw-triage button{font-size:12.5px;font-weight:600;border:none;background:transparent;color:var(--muted);padding:6px 13px;border-right:1px solid var(--line);transition:background .15s var(--ease),color .15s var(--ease)}
@@ -486,14 +489,18 @@
     label.appendChild(document.createTextNode(opts.label));
     var chip = document.createElement("span"); chip.className = "cw-saved-chip"; chip.appendChild(document.createTextNode("answered"));
     label.appendChild(chip);
+    var suggChip = document.createElement("span"); suggChip.className = "cw-sugg-chip"; suggChip.appendChild(document.createTextNode("Claude's call — review"));
+    label.appendChild(suggChip);
     var discuss = document.createElement("button"); discuss.type = "button"; discuss.className = "cw-discuss";
     discuss.textContent = "Discuss"; discuss.setAttribute("aria-expanded", "false");
     label.appendChild(discuss);
     wrap.appendChild(label);
 
-    var current = store[cid] || {};
+    var suggestion = (!store[cid] && suggestions[cid]) || null;
+    var current = store[cid] || suggestion || {};
     var decision = current.decision || null;
     var triage = null;
+    if (suggestion) wrap.setAttribute("data-suggested", "1");
 
     if (!opts.section) {
       triage = document.createElement("div"); triage.className = "cw-triage";
@@ -568,6 +575,8 @@
       var e = store[cid];
       var answered = !!(e && (e.decision || (e.text && e.text.trim())));
       wrap.setAttribute("data-saved", answered ? "1" : "0");
+      if (answered) wrap.removeAttribute("data-suggested");
+      else if (suggestion) status.textContent = "Claude's call — adjust if needed, then Save to confirm.";
       if (opts.host && opts.host.classList.contains("find")) opts.host.setAttribute("data-answered", answered ? "1" : "0");
       updateProgress();
     }
@@ -648,9 +657,12 @@
   })();
 
   // ---------- boot ----------
+  var suggestions = {};
   var patchesLoad = fetch("/api/patches").then(function(r){ if(!r.ok) throw 0; return r.json(); }).catch(function(){ return {}; });
-  Promise.all([apiLoad(), patchesLoad]).then(function(loaded){
+  var suggLoad = fetch("/api/suggestions").then(function(r){ if(!r.ok) throw 0; return r.json(); }).catch(function(){ return {}; });
+  Promise.all([apiLoad(), patchesLoad, suggLoad]).then(function(loaded){
     var data = loaded[0], patches = loaded[1] || {};
+    suggestions = loaded[2] || {};
     Object.keys(patches).forEach(function(cid){
       var host = document.querySelector('.find[data-cid="' + cid + '"]');
       if (host && patches[cid] && patches[cid].html) {

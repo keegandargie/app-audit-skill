@@ -70,6 +70,15 @@ docs, local agent-instruction files), what counts as a finding for this run's go
 concrete: route + file:line or it isn't a finding", and "6–14 findings, quality over quantity,
 rank impact honestly".
 
+**Leverage existing architecture.** Every finder's brief includes: before recommending a fix,
+search the codebase for an existing pattern/primitive that already solves this class of problem
+and NAME it in the recommendation (with a file ref) — the schema's `leverage` field carries it.
+Reuse beats invention; a recommendation that quietly rebuilds something the repo already has is
+a defect in the audit. When nothing fits, say "none — new architecture needed" and identify
+which adjacent pattern should be generalized to support the broader picture. Report cards and
+companion chats surface the leverage line so the person deciding sees the reuse path, not just
+the problem.
+
 Build `dimensions` from the type library (adapt briefs to the ask; give each a distinct `key`),
 then invoke the Workflow tool:
 
@@ -148,6 +157,16 @@ the user's triage answer itself** via an ```` ```aa-answer ```` block once their
 clear — writing `comments.json` with `via: "chat"` and updating the widget in place. Requires
 the `claude` CLI on PATH; each thread persists to `chats/<cid>.json`. Main-session context is
 never touched.
+
+**Pre-answer mode (make the call, the user reviews).** When the user asks for a first pass
+("make the calls and I'll review", "pre-answer these", "you decide, I'll confirm"): author
+`suggestions.json` in the run dir — `{ "<cid>": { decision, text, model, ts } }` — for the
+targeted cards (default: unanswered only; NEVER overwrite entries in `comments.json`). Calibrate
+decisions to the user's prior choices (the ledger shows their style) and write each `text` as
+actionable direction naming the leverage path. The report renders these as slate "Claude's call —
+review" proposals: pre-filled decision + note, NOT counted as answered until the user saves
+(confirming converts it to their answer). At harvest, a suggestion the user never confirmed is
+a proposal, not a decision — surface unconfirmed ones separately.
 
 Leave the server running — the user reviews on their own schedule, possibly across sessions.
 

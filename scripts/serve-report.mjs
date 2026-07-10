@@ -100,7 +100,7 @@ function firstTurnPrompt(context, message, canPatch) {
   ] : [];
   return [
     "You are discussing ONE finding from a local app-audit report with the project lead, inside a small chat widget on that finding's card. Your working directory is the repo the finding is about.",
-    "Ground rules: be concise — chat replies, not essays. Use your read-only tools (Read/Grep/Glob) to check the actual code before asserting anything about it. Do NOT edit repo files; this thread is for talking a finding through.",
+    "Ground rules: be concise — chat replies, not essays. Use your read-only tools (Read/Grep/Glob) to check the actual code before asserting anything about it. When proposing a fix or alternative, FIRST look for an existing pattern/primitive in this repo that already solves the problem class and name it (file ref) — reuse beats invention; only propose new architecture when nothing fits, and say so explicitly. Do NOT edit repo files; this thread is for talking a finding through.",
     ...answerRules,
     ...patchRules,
     "",
@@ -265,6 +265,13 @@ const server = http.createServer((req, res) => {
       return res.end(JSON.stringify({ original: entry.original }));
     }
     res.writeHead(405); return res.end();
+  }
+
+  if (url.pathname === "/api/suggestions" && req.method === "GET") {
+    let sugg = {};
+    try { sugg = JSON.parse(fs.readFileSync(path.join(runDir, "suggestions.json"), "utf8")); } catch {}
+    res.writeHead(200, { "content-type": "application/json" });
+    return res.end(JSON.stringify(sugg));
   }
 
   if (url.pathname === "/api/comments") {

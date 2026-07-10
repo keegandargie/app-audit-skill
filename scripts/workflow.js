@@ -38,6 +38,7 @@ const FINDINGS_SCHEMA = {
           recommendation: { type: 'string', description: 'What to change, concretely' },
           files: { type: 'array', items: { type: 'string' }, description: 'Repo-relative paths with line refs where useful' },
           evidence: { type: 'string', description: 'Optional: route + what a screenshot should capture to prove this finding live' },
+          leverage: { type: 'string', description: 'REQUIRED thinking, optional field: the EXISTING pattern/primitive in this codebase the fix should reuse (name + file ref) — search before recommending. If nothing fits, state "none — new architecture needed" and what should be generalized.' },
         },
       },
     },

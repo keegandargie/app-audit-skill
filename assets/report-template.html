@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<script>(function(){var t=localStorage.getItem("aa-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);})();</script>
+<style>
+  /* ============ app-audit identity — see references/DESIGN.md ============
+     Surveyor's field report: graphite ink, one measured moss green,
+     decisions as stamps. Moss = interaction. Slate = the companion agent.
+     Oxide/ochre/stone = severity data. The document is flat; evidence is framed. */
+  :root{
+    --bg: oklch(1 0 0);
+    --surface: oklch(0.972 0.004 130);
+    --ink: oklch(0.22 0.015 130);
+    --muted: oklch(0.46 0.02 130);
+    --line: oklch(0.90 0.006 130);
+    --moss: oklch(0.50 0.135 132);
+    --moss-ink: oklch(1 0 0);
+    --moss-tint: oklch(0.955 0.025 132);
+    --slate: oklch(0.30 0.04 255);
+    --slate-tint: oklch(0.962 0.010 255);
+    --slate-line: oklch(0.88 0.02 255);
+    --hi: oklch(0.50 0.19 25);
+    --hi-tint: oklch(0.962 0.018 25);
+    --hi-line: oklch(0.86 0.06 25);
+    --md: oklch(0.53 0.115 78);
+    --md-tint: oklch(0.965 0.02 85);
+    --md-line: oklch(0.87 0.055 85);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --sans: system-ui, "Segoe UI", sans-serif;
+    --serif: Charter, "Bitstream Charter", Cambria, Georgia, serif;
+    --mono: "Cascadia Code", ui-monospace, Consolas, monospace;
+    /* subject-app tokens — mocks depict the AUDITED app, not this report.
+       build-report.mjs overrides these from meta.json "app" when the audited
+       project has its own design system. */
+    --app-accent: var(--moss);
+    --app-accent-ink: var(--moss-ink);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: oklch(0.135 0 0);
+      --surface: oklch(0.185 0.006 130);
+      --ink: oklch(0.93 0.004 130);
+      --muted: oklch(0.68 0.012 130);
+      --line: oklch(0.27 0.006 130);
+      --moss: oklch(0.74 0.13 132);
+      --moss-ink: oklch(0.15 0.02 132);
+      --moss-tint: oklch(0.24 0.035 132);
+      --slate: oklch(0.78 0.05 255);
+      --slate-tint: oklch(0.21 0.018 255);
+      --slate-line: oklch(0.33 0.025 255);
+      --hi: oklch(0.72 0.16 25);
+      --hi-tint: oklch(0.225 0.04 25);
+      --hi-line: oklch(0.38 0.07 25);
+      --md: oklch(0.76 0.11 80);
+      --md-tint: oklch(0.225 0.03 85);
+      --md-line: oklch(0.38 0.06 85);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: oklch(0.135 0 0);
+    --surface: oklch(0.185 0.006 130);
+    --ink: oklch(0.93 0.004 130);
+    --muted: oklch(0.68 0.012 130);
+    --line: oklch(0.27 0.006 130);
+    --moss: oklch(0.74 0.13 132);
+    --moss-ink: oklch(0.15 0.02 132);
+    --moss-tint: oklch(0.24 0.035 132);
+    --slate: oklch(0.78 0.05 255);
+    --slate-tint: oklch(0.21 0.018 255);
+    --slate-line: oklch(0.33 0.025 255);
+    --hi: oklch(0.72 0.16 25);
+    --hi-tint: oklch(0.225 0.04 25);
+    --hi-line: oklch(0.38 0.07 25);
+    --md: oklch(0.76 0.11 80);
+    --md-tint: oklch(0.225 0.03 85);
+    --md-line: oklch(0.38 0.06 85);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14.5px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px 120px}
+  a{color:var(--moss);text-decoration:none}
+  a:hover{text-decoration:underline}
+  :is(a,button,select,textarea):focus-visible{outline:2px solid var(--moss);outline-offset:2px;border-radius:3px}
+  code,.mono{font-family:var(--mono);font-size:.88em}
+  h1,h2,h3{line-height:1.25;text-wrap:balance;margin:0}
+  button{font:inherit;cursor:pointer}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  }
+
+  /* ---------- progress rail ---------- */
+  #aa-progress{position:sticky;top:0;z-index:40;background:var(--bg);border-bottom:1px solid var(--line)}
+  #aa-progress .inner{max-width:880px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:16px;font-size:12.5px}
+  #aa-progress .count{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+  #aa-progress .bar{min-width:140px}
+  #aa-progress .ctx{font-size:12.5px;font-weight:620;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+  #aa-progress .ctx .cc{font-family:var(--mono);font-size:11px;font-weight:400;color:var(--muted);margin-left:8px}
+  #aa-progress .ctx.urgent{color:var(--hi)}
+  @media (max-width:760px){ #aa-progress .ctx{display:none} }
+  #aa-progress .bar{flex:1;height:3px;border-radius:99px;background:var(--line);overflow:hidden}
+  #aa-progress .fill{height:100%;width:0%;background:var(--moss);border-radius:99px;transition:width .3s var(--ease)}
+  #aa-progress button{font-size:12px;font-weight:600;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:7px;padding:4px 12px;white-space:nowrap;transition:border-color .15s var(--ease)}
+  #aa-progress button:hover{border-color:var(--moss);color:var(--moss)}
+  #aa-progress .mode{font-size:11px;color:var(--muted);white-space:nowrap}
+  @media (max-width:640px){ #aa-progress .mode{display:none} }
+
+  /* ---------- masthead ---------- */
+  header.top{padding:52px 0 0}
+  .eyebrow{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  h1{font-size:27px;font-weight:650;letter-spacing:-.015em;margin:10px 0 12px}
+  .lede{font-family:var(--serif);font-size:15.5px;line-height:1.65;color:var(--muted);max-width:66ch;margin:0 0 14px}
+  .stats{font-family:var(--mono);font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:0;margin-bottom:28px}
+  .stat{white-space:nowrap}
+  .stat + .stat::before{content:"·";margin:0 10px;color:var(--line)}
+  .stat b{font-weight:600;color:var(--ink)}
+  .stat .hi{color:var(--hi)} .stat .md{color:var(--md)} .stat .lo{color:var(--muted)}
+
+  /* ---------- index ---------- */
+  nav.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0 32px;border-top:1px solid var(--line);padding:6px 0 0}
+  nav.toc a{display:flex;align-items:baseline;gap:10px;padding:8px 2px;color:var(--ink);font-size:13.5px;border-bottom:1px solid var(--line);transition:color .15s var(--ease)}
+  nav.toc a:hover{color:var(--moss);text-decoration:none}
+  nav.toc a .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  nav.toc a .c{font-family:var(--mono);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  nav.toc a .c.done{color:var(--moss)}
+  nav.toc a.urgent{color:var(--hi);font-weight:600}
+
+  /* ---------- sections ---------- */
+  section{margin-top:72px;scroll-margin-top:56px}
+  .sechead{display:flex;align-items:baseline;gap:12px;padding-bottom:10px;border-bottom:2px solid var(--ink)}
+  .secnum{display:none}
+  h2{font-size:20px;font-weight:650;letter-spacing:-.01em}
+  .seccount{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
+  .secsum{font-family:var(--serif);font-size:15px;line-height:1.6;color:var(--muted);max-width:66ch;margin:12px 0 8px}
+  /* urgent is the ONLY filled band — visually a different class of thing than a high-impact row */
+  section.urgent-band .sechead{border-bottom:none;background:var(--hi-tint);border:1px solid var(--hi-line);border-radius:9px;padding:12px 16px}
+  section.urgent-band h2{color:var(--hi)}
+  section.urgent-band .seccount{color:var(--hi)}
+
+  /* ---------- findings: ledger entries ---------- */
+  .find{border-top:1px solid var(--line);padding:26px 0 30px;margin:0;content-visibility:auto;contain-intrinsic-size:auto 520px}
+  .find:first-of-type{border-top:none}
+  .secsum + .find, .sechead + .find{border-top:none}
+  .chips{display:flex;flex-wrap:wrap;align-items:baseline;gap:14px;margin-bottom:8px;font-size:12px}
+  .chip{font-weight:600;letter-spacing:0;text-transform:none;padding:0;border:none;background:none;display:inline-flex;align-items:baseline;gap:6px}
+  .chip.hi,.chip.md,.chip.lo{font-size:12px}
+  .chip.hi::before,.chip.md::before,.chip.lo::before{content:"";width:8px;height:8px;border-radius:50%;position:relative;top:0}
+  /* severity: the DOT carries the color; the word stays ink so red is budgeted for urgency */
+  .chip.hi{color:var(--ink)} .chip.hi::before{background:var(--hi)}
+  .chip.md{color:var(--ink)} .chip.md::before{background:var(--md)}
+  .chip.lo{color:var(--muted)} .chip.lo::before{background:var(--muted);opacity:.55}
+  .chip.eff{font-family:var(--mono);font-weight:400;color:var(--muted)}
+  .chip.cat{font-family:var(--mono);font-weight:400;color:var(--muted)}
+  .chip.cat::before{content:"/ ";color:var(--line)}
+  h3{font-size:16.5px;font-weight:620;margin-bottom:5px}
+  .find.urgent h3{color:var(--hi)}
+  .where{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin:0 0 14px;word-break:break-all}
+  .find p{font-family:var(--serif);font-size:15.5px;line-height:1.65;margin:0 0 14px;max-width:68ch}
+  .find p:last-of-type{margin-bottom:0}
+
+  /* ---------- exhibits: framed evidence ---------- */
+  figure.shot{margin:18px 0}
+  .imgwrap{position:relative;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+  .imgwrap img{display:block;width:100%;height:auto}
+  .pin{position:absolute;border:2.5px solid oklch(0.55 0.21 25);border-radius:10px;box-shadow:0 0 0 3px oklch(0.55 0.21 25 / .16)}
+  .pin .tag{position:absolute;top:-11px;left:-11px;width:22px;height:22px;border-radius:50%;background:oklch(0.55 0.21 25);color:#fff;font-family:var(--mono);font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center}
+  figcaption{font-family:var(--serif);font-size:13.5px;line-height:1.6;color:var(--muted);margin-top:9px;max-width:68ch}
+  figcaption b{color:var(--ink);font-weight:600;font-family:var(--sans);font-size:12.5px}
+
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 6px}
+  @media (max-width:700px){ .ba{grid-template-columns:1fr} }
+  .panel{border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;background:var(--bg)}
+  .panel .phead{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:620;padding:8px 14px;border-bottom:1px solid var(--line);letter-spacing:0;text-transform:none}
+  .panel .phead::before{content:"";width:8px;height:8px;border-radius:50%}
+  .panel.cur .phead{color:var(--hi)} .panel.cur .phead::before{background:var(--hi)}
+  .panel.aft .phead{color:var(--moss)} .panel.aft .phead::before{background:var(--moss)}
+  .panel .pbody{padding:14px;font-size:13.5px;flex:1}
+  .panel .pbody > :first-child{margin-top:0} .panel .pbody > :last-child{margin-bottom:0}
+  .panel .pbody > ul{font-family:var(--serif);font-size:14px;line-height:1.6;margin:0;padding-left:18px}
+  .panel li{margin:5px 0}
+  .panel p{font-family:var(--serif);font-size:13.5px !important;line-height:1.6}
+
+  /* mock UI bits (inside exhibits) */
+  .mock{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;font-size:13px}
+  .mock + .mock{margin-top:10px}
+  .mock .mtitle{font-weight:620;font-size:13.5px;margin-bottom:4px}
+  .mock .mtext{color:var(--muted)}
+  .mbtnrow{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  .mbtn{border-radius:7px;padding:5px 14px;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:var(--bg)}
+  .mbtn.primary{background:var(--app-accent);border-color:var(--app-accent);color:var(--app-accent-ink)}
+  .mbtn.danger{background:var(--hi-tint);border-color:var(--hi-line);color:var(--hi)}
+  .mnote{display:flex;gap:8px;align-items:flex-start;border-radius:7px;padding:8px 10px;font-size:12.5px;margin-top:10px}
+  .mnote.warn{background:var(--md-tint);border:1px solid var(--md-line);color:var(--md)}
+  .mnote.bad{background:var(--hi-tint);border:1px solid var(--hi-line);color:var(--hi)}
+  .mnote.good{background:var(--moss-tint);border:1px solid var(--line);color:var(--moss)}
+  .mrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-bottom:1px solid var(--line)}
+  .mrow:last-child{border-bottom:none}
+  .mrow .rl{display:flex;flex-direction:column}
+  .mrow .rl b{font-weight:620;font-size:12.5px} .mrow .rl span{font-size:11.5px;color:var(--muted)}
+  .pill{font-size:11px;font-weight:600;border-radius:99px;padding:2px 9px;white-space:nowrap}
+  .pill.green{background:var(--moss-tint);color:var(--moss)}
+  .pill.amber{background:var(--md-tint);color:var(--md)}
+  .pill.red{background:var(--hi-tint);color:var(--hi)}
+  .pill.grey{background:var(--surface);color:var(--muted);border:1px solid var(--line)}
+  .mfield{margin:8px 0}
+  .mfield label{display:block;font-size:11.5px;font-weight:600;margin-bottom:4px}
+  .mfield .inp{border:1px solid var(--line);border-radius:7px;background:var(--bg);padding:7px 10px;color:var(--muted);min-height:16px}
+  .mfield .inp.err{border-color:var(--hi)}
+  .ferr{font-size:11.5px;color:var(--hi);margin-top:4px}
+  .toast{display:inline-flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 13px;font-size:12.5px;margin-top:10px}
+  .toast .dot{width:8px;height:8px;border-radius:50%}
+  .toast .dot.ok{background:var(--moss)} .toast .dot.err{background:var(--hi)}
+
+  /* flow diagrams */
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0}
+  .fbox{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:6px 12px;font-size:12.5px}
+  .fbox b{font-weight:620}
+  .fbox.bad{border-color:var(--hi-line);background:var(--hi-tint);color:var(--hi)}
+  .fbox.good{border-color:var(--line);background:var(--moss-tint);color:var(--moss)}
+  .fbox.dim{color:var(--muted);border-style:dashed;background:transparent}
+  .farr{color:var(--muted);font-size:13px;flex-shrink:0}
+  .flabel{width:100%;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px}
+
+  pre{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;font-size:12px;line-height:1.6;margin:12px 0;font-family:var(--mono)}
+  pre .del{color:var(--hi)} pre .add{color:var(--moss)} pre .cmt{color:var(--muted)}
+
+  /* "also" rows (compact context, non-answerable) */
+  .also{margin-top:8px;border-top:1px solid var(--line);padding-top:14px}
+  .also .alabel{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:8px}
+  .arow{display:flex;gap:10px;align-items:baseline;padding:6px 0;font-size:13.5px}
+  .adot{width:7px;height:7px;border-radius:50%;flex-shrink:0;position:relative;top:-1px}
+  .adot.hi{background:var(--hi)} .adot.md{background:var(--md)} .adot.lo{background:var(--muted);opacity:.5}
+  .arow b{font-weight:620} .arow .d{color:var(--muted);font-family:var(--serif)}
+  .arow .e{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted);flex-shrink:0}
+
+  /* ---------- the decision strip (injected) ---------- */
+  .cw{margin-top:20px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .cw .cw-label{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:620;margin-bottom:10px}
+  .cw .cw-saved-chip{display:none;align-items:center;gap:5px;font-size:11.5px;font-weight:620;color:var(--moss);background:var(--moss-tint);border-radius:99px;padding:2px 10px}
+  .cw .cw-saved-chip::before{content:"✓"}
+  .cw[data-saved="1"] .cw-saved-chip{display:inline-flex;animation:aa-stamp .18s var(--ease)}
+  @keyframes aa-stamp{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+  .cw .cw-triage{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:10px;flex-wrap:wrap;background:var(--bg)}
+  .cw .cw-triage button{font-size:12.5px;font-weight:600;border:none;background:transparent;color:var(--muted);padding:6px 13px;border-right:1px solid var(--line);transition:background .15s var(--ease),color .15s var(--ease)}
+  .cw .cw-triage button:last-child{border-right:none}
+  .cw .cw-triage button:hover{color:var(--ink);background:var(--surface)}
+  .cw .cw-triage button[aria-pressed="true"]{background:var(--moss);color:var(--moss-ink)}
+  .cw textarea{width:100%;min-height:54px;resize:vertical;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:13.5px/1.5 var(--sans);padding:8px 10px}
+  .cw textarea::placeholder{color:var(--muted)}
+  .cw .cw-foot{display:flex;align-items:center;gap:10px;margin-top:10px}
+  .cw .cw-save{font-size:12.5px;font-weight:620;background:var(--moss);color:var(--moss-ink);border:1px solid var(--moss);border-radius:7px;padding:5px 18px;transition:opacity .15s var(--ease)}
+  .cw .cw-save:hover{opacity:.9}
+  .cw .cw-save:disabled{opacity:.5;cursor:default}
+  .cw .cw-status{font-size:12px;color:var(--muted)}
+  .cw.cw-section{margin-top:28px}
+  .cw-discuss{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border:1px solid var(--slate-line);background:transparent;color:var(--slate);border-radius:99px;padding:3px 12px;transition:background .15s var(--ease)}
+  .cw-discuss:hover{background:var(--slate-tint)}
+  .cw-discuss[aria-expanded="true"]{background:var(--slate);border-color:var(--slate);color:var(--bg)}
+
+  /* ---------- companion chat (slate = the agent) ---------- */
+  .chat{display:none;margin-top:12px;border:1px solid var(--slate-line);border-radius:10px;overflow:hidden;background:var(--bg)}
+  .chat[data-open="1"]{display:block;animation:aa-open .18s var(--ease)}
+  @keyframes aa-open{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .chat .chat-head{display:flex;align-items:center;gap:12px;padding:8px 14px;border-bottom:1px solid var(--slate-line);font-size:11.5px;color:var(--slate);background:var(--slate-tint)}
+  .chat .chat-head select{font:12px var(--sans);border:1px solid var(--slate-line);border-radius:6px;background:var(--bg);color:var(--ink);padding:3px 6px;margin-left:auto;flex-shrink:0}
+  .chat .msgs{max-height:360px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+  .chat .msg{max-width:86%;border-radius:10px;padding:8px 12px;font-size:13.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+  .chat .msg.user{align-self:flex-end;background:var(--moss-tint)}
+  .chat .msg.ai{align-self:flex-start;background:var(--slate-tint)}
+  .chat .msg.ai .mmodel{display:block;font-family:var(--mono);font-size:10px;color:var(--slate);margin-bottom:4px}
+  .chat .msg code{background:var(--surface);border-radius:4px;padding:0 4px}
+  .chat .msg pre{margin:6px 0;white-space:pre}
+  .chat .msg.err{align-self:stretch;background:var(--hi-tint);border:1px solid var(--hi-line);color:var(--hi);font-size:12.5px}
+  .chat .thinking{align-self:flex-start;color:var(--slate);font-size:12.5px;padding:2px}
+  .chat .thinking::after{content:"";display:inline-block;width:1.2em;text-align:left;animation:aa-dots 1.2s steps(4,end) infinite}
+  @keyframes aa-dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+  .chat .chat-input{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--slate-line)}
+  .chat .chat-input textarea{flex:1;min-height:38px;max-height:120px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:13.5px/1.5 var(--sans);padding:8px 10px}
+  .chat .chat-send{font-size:12.5px;font-weight:620;background:var(--slate);color:var(--bg);border:1px solid var(--slate);border-radius:7px;padding:5px 16px;align-self:flex-end;transition:opacity .15s var(--ease)}
+  .chat .chat-send:hover{opacity:.9}
+  .chat .chat-send:disabled{opacity:.5;cursor:default}
+  .patch-note{display:flex;gap:6px;align-items:center;font-size:11.5px;color:var(--slate);background:var(--slate-tint);border-radius:7px;padding:5px 11px;margin-bottom:14px}
+  .patch-note a{color:var(--slate);font-weight:620;text-decoration:underline}
+
+  /* ---------- plan + footer ---------- */
+  .plan{border:1px solid var(--line);border-radius:10px;padding:20px 24px;margin-top:20px;background:var(--surface)}
+  .plan ol{margin:6px 0 0;padding-left:22px;font-family:var(--serif);font-size:15px;line-height:1.65}
+  .plan li{margin:9px 0;max-width:68ch}
+  .method{font-family:var(--serif);font-size:13px;line-height:1.6;color:var(--muted);margin-top:30px;max-width:70ch}
+  #aa-fallback{display:none;position:fixed;bottom:16px;right:16px;z-index:60}
+  #aa-fallback button{font-size:12.5px;font-weight:600;background:var(--md-tint);border:1px solid var(--md-line);color:var(--md);border-radius:8px;padding:8px 14px}
+</style>
+{{APP_TOKENS}}
+</head>
+<body>
+<div id="aa-progress"><div class="inner">
+  <span class="count" id="aa-count">…</span>
+  <span class="ctx" id="aa-ctx"></span>
+  <div class="bar"><div class="fill" id="aa-fill"></div></div>
+  <button id="aa-next" type="button">Next unanswered ↓</button>
+  <button id="aa-theme" type="button" aria-label="Switch theme">Theme: Auto</button>
+  <span class="mode" id="aa-mode"></span>
+</div></div>
+
+<div class="wrap">
+<header class="top">
+  <div class="eyebrow">{{EYEBROW}}</div>
+  <h1>{{TITLE}}</h1>
+  <p class="lede">{{LEDE}} Answer each finding with the decision strip beneath it — or open its Discuss thread and let the companion talk it through and record your call. Everything saves to <code>comments.json</code> as you go.</p>
+  <div class="stats">{{STATS}}</div>
+  <nav class="toc" id="aa-toc" aria-label="Sections"></nav>
+</header>
+
+{{CONTENT}}
+
+<section id="aa-general" data-cid="_general">
+  <div class="sechead"><span class="secnum">✎</span><h2>General notes</h2></div>
+  <p class="secsum">Anything not tied to a specific finding — priorities, missing areas, direction.</p>
+</section>
+</div>
+
+<div id="aa-fallback"><button type="button" id="aa-download">Server offline — download comments.json</button></div>
+
+<script>
+(function(){
+  "use strict";
+  var DECISIONS = [
+    ["fix-now","Fix now"],["batch","Batch it"],["spec","Needs spec"],["later","Later"],["skip","Skip"],["discuss","Discuss"]
+  ];
+  var store = {};          // cid -> {decision, text, ts}
+  var mode = "server";     // or "local"
+  var $ = function(s, el){ return (el||document).querySelector(s); };
+  var $$ = function(s, el){ return Array.prototype.slice.call((el||document).querySelectorAll(s)); };
+
+  // ---------- index (TOC with live per-section progress) ----------
+  var toc = $("#aa-toc");
+  var tocCounts = {};   // sectionEl -> count span
+  $$("section[data-cid]").forEach(function(sec){
+    var h2 = $("h2", sec); if (!h2) return;
+    if (!sec.id) sec.id = "sec-" + sec.getAttribute("data-cid");
+    var a = document.createElement("a");
+    a.href = "#" + sec.id;
+    if (sec.classList.contains("urgent-band")) a.classList.add("urgent");
+    var t = document.createElement("span"); t.className = "t";
+    t.textContent = h2.textContent.split("—")[0].trim();
+    var c = document.createElement("span"); c.className = "c";
+    a.appendChild(t); a.appendChild(c);
+    toc.appendChild(a);
+    tocCounts[sec.id] = c;
+  });
+
+  // ---------- persistence ----------
+  function localLoad(){ try { return JSON.parse(localStorage.getItem("aa-comments") || "{}"); } catch(e){ return {}; } }
+  function localSave(){ localStorage.setItem("aa-comments", JSON.stringify(store)); }
+  function setMode(m){
+    mode = m;
+    $("#aa-mode").textContent = m === "server" ? "saving to comments.json" : "offline — saving to this browser";
+    $("#aa-fallback").style.display = m === "server" ? "none" : "block";
+  }
+  function apiLoad(){
+    return fetch("/api/comments").then(function(r){ if(!r.ok) throw 0; return r.json(); })
+      .then(function(data){ setMode("server"); return data; })
+      .catch(function(){ setMode("local"); return localLoad(); });
+  }
+  function apiSave(cid, entry, cb){
+    var payload = { id: cid, decision: entry.decision || null, text: entry.text || "" };
+    fetch("/api/comments", { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify(payload) })
+      .then(function(r){ if(!r.ok) throw 0; setMode("server"); cb("Saved"); })
+      .catch(function(){ setMode("local"); localSave(); cb("Saved locally — use the download button before closing"); });
+  }
+  $("#aa-download").addEventListener("click", function(){
+    var blob = new Blob([JSON.stringify(store, null, 2)], { type:"application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = "comments.json"; a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  // ---------- mini markdown (chat replies) ----------
+  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function md(s){
+    var out = esc(s);
+    out = out.replace(/```(?:\w+)?\n([\s\S]*?)```/g, function(_, code){ return "<pre>" + code.replace(/\n$/,"") + "</pre>"; });
+    out = out.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+    out = out.replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
+    return out;
+  }
+
+  // ---------- card patches (agent-driven live card updates) ----------
+  var MODEL_LABELS = { "claude-sonnet-5": "Sonnet 5", "claude-fable-5": "Fable 5", "claude-opus-4-8": "Opus 4.8", "claude-haiku-4-5-20251001": "Haiku 4.5" };
+  function applyPatchDom(host, cid, html, byLabel){
+    var widget = host.querySelector(".cw");
+    if (widget) widget.remove();
+    host.innerHTML = html;
+    var b = document.createElement("div"); b.className = "patch-note";
+    b.appendChild(document.createTextNode("✦ card updated by " + byLabel + " · "));
+    var r = document.createElement("a"); r.href = "#"; r.textContent = "restore original";
+    r.addEventListener("click", function(ev){
+      ev.preventDefault();
+      fetch("/api/patches/" + encodeURIComponent(cid), { method: "DELETE" })
+        .then(function(rr){ return rr.json(); })
+        .then(function(j){
+          if (j.original == null) return;
+          var w = host.querySelector(".cw"); if (w) w.remove();
+          host.innerHTML = j.original;
+          if (w) host.appendChild(w);
+        }).catch(function(){});
+    });
+    b.appendChild(r);
+    host.insertBefore(b, host.firstChild);
+    if (widget) host.appendChild(widget);
+  }
+
+  // ---------- companion chat ----------
+  function buildChat(cid, helpers){
+    var box = document.createElement("div"); box.className = "chat";
+    var head = document.createElement("div"); head.className = "chat-head";
+    head.appendChild(document.createTextNode("Isolated repo-aware Claude session for this card — it can update the card and record your answer. Saves to chats/" + cid + ".json."));
+    var modelSel = document.createElement("select");
+    [["claude-sonnet-5","Sonnet 5"],["claude-fable-5","Fable 5"],["claude-opus-4-8","Opus 4.8"],["claude-haiku-4-5-20251001","Haiku 4.5"]].forEach(function(m){
+      var o = document.createElement("option"); o.value = m[0]; o.textContent = m[1]; modelSel.appendChild(o);
+    });
+    modelSel.setAttribute("aria-label", "Model for this thread");
+    head.appendChild(modelSel);
+    box.appendChild(head);
+    var msgs = document.createElement("div"); msgs.className = "msgs"; box.appendChild(msgs);
+    var inputRow = document.createElement("div"); inputRow.className = "chat-input";
+    var ta = document.createElement("textarea"); ta.placeholder = "Ask about this finding — tradeoffs, alternatives, blast radius…";
+    var send = document.createElement("button"); send.type = "button"; send.className = "chat-send"; send.textContent = "Send";
+    inputRow.appendChild(ta); inputRow.appendChild(send); box.appendChild(inputRow);
+
+    function addMsg(role, text, model){
+      var m = document.createElement("div"); m.className = "msg " + role;
+      if (role === "ai" && model) { var t = document.createElement("span"); t.className = "mmodel"; t.textContent = MODEL_LABELS[model] || model; m.appendChild(t); }
+      var body = document.createElement("span"); body.innerHTML = md(text); m.appendChild(body);
+      msgs.appendChild(m); msgs.scrollTop = msgs.scrollHeight;
+      return m;
+    }
+    var hydrated = false;
+    box.hydrate = function(){
+      if (hydrated) return; hydrated = true;
+      fetch("/api/chat/" + encodeURIComponent(cid)).then(function(r){ return r.json(); }).then(function(t){
+        (t.messages || []).forEach(function(m){ addMsg(m.role === "user" ? "user" : "ai", m.text, m.model); });
+      }).catch(function(){});
+    };
+    function doSend(){
+      var text = ta.value.trim(); if (!text) return;
+      var label = MODEL_LABELS[modelSel.value] || modelSel.value;
+      ta.value = ""; addMsg("user", text);
+      send.disabled = true; ta.disabled = true;
+      var spin = document.createElement("div"); spin.className = "thinking";
+      spin.textContent = label + " is looking at the repo"; msgs.appendChild(spin); msgs.scrollTop = msgs.scrollHeight;
+      fetch("/api/chat/" + encodeURIComponent(cid), {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          message: text, model: modelSel.value,
+          context: helpers.getContext(),
+          cardHtml: helpers.getCardHtml ? helpers.getCardHtml() : null
+        })
+      }).then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+        .then(function(res){
+          spin.remove();
+          if (res.ok) {
+            addMsg("ai", res.j.reply || "(empty reply)", modelSel.value);
+            if (res.j.patch && helpers.onPatch) helpers.onPatch(res.j.patch, label);
+            if (res.j.answer && helpers.onAnswer) helpers.onAnswer(res.j.answer);
+          } else addMsg("err", res.j.error || "request failed");
+        })
+        .catch(function(){ spin.remove(); addMsg("err", "Server unreachable — is serve-report.mjs still running?"); })
+        .then(function(){ send.disabled = false; ta.disabled = false; ta.focus(); });
+    }
+    send.addEventListener("click", doSend);
+    ta.addEventListener("keydown", function(e){ if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) doSend(); });
+    return box;
+  }
+
+  // ---------- the decision strip ----------
+  function buildWidget(cid, opts){
+    var wrap = document.createElement("div");
+    wrap.className = "cw" + (opts.section ? " cw-section" : "");
+    wrap.setAttribute("data-for", cid);
+    var label = document.createElement("div"); label.className = "cw-label";
+    label.appendChild(document.createTextNode(opts.label));
+    var chip = document.createElement("span"); chip.className = "cw-saved-chip"; chip.appendChild(document.createTextNode("answered"));
+    label.appendChild(chip);
+    var discuss = document.createElement("button"); discuss.type = "button"; discuss.className = "cw-discuss";
+    discuss.textContent = "Discuss"; discuss.setAttribute("aria-expanded", "false");
+    label.appendChild(discuss);
+    wrap.appendChild(label);
+
+    var current = store[cid] || {};
+    var decision = current.decision || null;
+    var triage = null;
+
+    if (!opts.section) {
+      triage = document.createElement("div"); triage.className = "cw-triage";
+      DECISIONS.forEach(function(d){
+        var b = document.createElement("button"); b.type = "button";
+        b.textContent = d[1]; b.setAttribute("data-decision", d[0]);
+        b.setAttribute("aria-pressed", decision === d[0] ? "true" : "false");
+        b.addEventListener("click", function(){
+          decision = decision === d[0] ? null : d[0];
+          $$("button", triage).forEach(function(x){ x.setAttribute("aria-pressed", x.getAttribute("data-decision") === decision ? "true" : "false"); });
+        });
+        triage.appendChild(b);
+      });
+      wrap.appendChild(triage);
+    }
+
+    var ta = document.createElement("textarea");
+    ta.placeholder = opts.placeholder;
+    ta.value = current.text || "";
+    wrap.appendChild(ta);
+
+    var foot = document.createElement("div"); foot.className = "cw-foot";
+    var save = document.createElement("button"); save.type = "button"; save.className = "cw-save"; save.textContent = "Save";
+    var status = document.createElement("span"); status.className = "cw-status";
+    foot.appendChild(save); foot.appendChild(status);
+    wrap.appendChild(foot);
+
+    var chat = buildChat(cid, {
+      getContext: function(){
+        if (opts.section && opts.host) {
+          var h2 = opts.host.querySelector("h2"), sum = opts.host.querySelector(".secsum");
+          var titles = $$(".find h3", opts.host).map(function(h){ return "- " + h.textContent; }).join("\n");
+          return "Theme: " + (h2 ? h2.textContent : cid) + "\n" + (sum ? sum.textContent + "\n" : "") + "Findings in this theme:\n" + titles;
+        }
+        if (opts.host) {
+          var clone = opts.host.cloneNode(true);
+          $$(".cw, .patch-note", clone).forEach(function(n){ n.remove(); });
+          return clone.innerText.replace(/\n{3,}/g, "\n\n").trim().slice(0, 6000);
+        }
+        return "";
+      },
+      getCardHtml: (!opts.section && opts.host) ? function(){
+        var clone = opts.host.cloneNode(true);
+        $$(".cw, .patch-note", clone).forEach(function(n){ n.remove(); });
+        return clone.innerHTML.trim();
+      } : null,
+      onPatch: (!opts.section && opts.host) ? function(html, byLabel){
+        applyPatchDom(opts.host, cid, html, byLabel);
+      } : null,
+      onAnswer: function(ans){
+        store[cid] = ans;
+        ta.value = ans.text || "";
+        if (!opts.section && triage) {
+          decision = ans.decision || null;
+          $$("button", triage).forEach(function(x){ x.setAttribute("aria-pressed", x.getAttribute("data-decision") === decision ? "true" : "false"); });
+        }
+        status.textContent = "Saved from discussion";
+        paint();
+      }
+    });
+    wrap.appendChild(chat);
+    // prefetch the thread on hover so opening feels instant
+    discuss.addEventListener("mouseenter", function(){ chat.hydrate(); }, { once: true });
+    discuss.addEventListener("click", function(){
+      var open = chat.getAttribute("data-open") === "1";
+      chat.setAttribute("data-open", open ? "0" : "1");
+      discuss.setAttribute("aria-expanded", open ? "false" : "true");
+      if (!open) chat.hydrate();
+    });
+
+    function paint(){
+      var e = store[cid];
+      var answered = !!(e && (e.decision || (e.text && e.text.trim())));
+      wrap.setAttribute("data-saved", answered ? "1" : "0");
+      if (opts.host && opts.host.classList.contains("find")) opts.host.setAttribute("data-answered", answered ? "1" : "0");
+      updateProgress();
+    }
+    save.addEventListener("click", function(){
+      var entry = { decision: decision, text: ta.value.trim(), ts: new Date().toISOString() };
+      if (!entry.decision && !entry.text) { status.textContent = "Pick a decision or write a note first"; return; }
+      store[cid] = entry;
+      save.disabled = true; status.textContent = "Saving…";
+      apiSave(cid, entry, function(msg){ save.disabled = false; status.textContent = msg; paint(); });
+    });
+    paint();
+    return wrap;
+  }
+
+  // ---------- progress ----------
+  function answered(f){
+    var e = store[f.getAttribute("data-cid")];
+    return !!(e && (e.decision || (e.text && e.text.trim())));
+  }
+  function updateProgress(){
+    var finds = $$(".find[data-cid]");
+    var done = finds.filter(answered).length;
+    $("#aa-count").textContent = done + " / " + finds.length + " answered";
+    $("#aa-fill").style.width = finds.length ? (100 * done / finds.length) + "%" : "0%";
+    $$("section[data-cid]").forEach(function(sec){
+      var c = tocCounts[sec.id]; if (!c) return;
+      var sf = $$(".find[data-cid]", sec);
+      if (!sf.length) { c.textContent = ""; return; }
+      var sd = sf.filter(answered).length;
+      c.textContent = sd + "/" + sf.length;
+      c.className = "c" + (sd === sf.length ? " done" : "");
+    });
+  }
+  $("#aa-next").addEventListener("click", function(){
+    var next = $$(".find[data-cid]").filter(function(f){ return f.getAttribute("data-answered") !== "1"; })[0];
+    if (next) next.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  // ---------- theme switch (auto → light → dark) ----------
+  (function(){
+    var btn = $("#aa-theme");
+    var order = ["auto", "light", "dark"];
+    function label(v){ return "Theme: " + v.charAt(0).toUpperCase() + v.slice(1); }
+    function current(){ return localStorage.getItem("aa-theme") || "auto"; }
+    btn.textContent = label(current());
+    btn.addEventListener("click", function(){
+      var next = order[(order.indexOf(current()) + 1) % order.length];
+      if (next === "auto") { localStorage.removeItem("aa-theme"); document.documentElement.removeAttribute("data-theme"); }
+      else { localStorage.setItem("aa-theme", next); document.documentElement.setAttribute("data-theme", next); }
+      btn.textContent = label(next);
+    });
+  })();
+
+  // ---------- sticky section context (which theme am I in?) ----------
+  (function(){
+    var ctx = $("#aa-ctx");
+    var secs = $$("section[data-cid]");
+    var ticking = false;
+    function update(){
+      ticking = false;
+      var y = 64, active = null;
+      for (var i = 0; i < secs.length; i++) {
+        if (secs[i].getBoundingClientRect().top <= y) active = secs[i]; else break;
+      }
+      if (!active) { ctx.textContent = ""; ctx.className = "ctx"; return; }
+      var h2 = $("h2", active);
+      var name = h2 ? h2.textContent.split("—")[0].trim() : "";
+      var count = tocCounts[active.id] ? tocCounts[active.id].textContent : "";
+      ctx.innerHTML = "";
+      ctx.appendChild(document.createTextNode(name));
+      if (count) { var cc = document.createElement("span"); cc.className = "cc"; cc.textContent = count; ctx.appendChild(cc); }
+      ctx.className = "ctx" + (active.classList.contains("urgent-band") ? " urgent" : "");
+    }
+    window.addEventListener("scroll", function(){
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
+    update();
+  })();
+
+  // ---------- boot ----------
+  var patchesLoad = fetch("/api/patches").then(function(r){ if(!r.ok) throw 0; return r.json(); }).catch(function(){ return {}; });
+  Promise.all([apiLoad(), patchesLoad]).then(function(loaded){
+    var data = loaded[0], patches = loaded[1] || {};
+    Object.keys(patches).forEach(function(cid){
+      var host = document.querySelector('.find[data-cid="' + cid + '"]');
+      if (host && patches[cid] && patches[cid].html) {
+        applyPatchDom(host, cid, patches[cid].html, MODEL_LABELS[patches[cid].model] || patches[cid].model || "agent");
+      }
+    });
+    store = data || {};
+    $$(".find[data-cid]").forEach(function(f){
+      f.appendChild(buildWidget(f.getAttribute("data-cid"), {
+        host: f, label: "Your call", placeholder: "Context, constraints, direction — anything I should know before acting on this."
+      }));
+    });
+    $$("section[data-cid]").forEach(function(sec){
+      var cid = "sec:" + sec.getAttribute("data-cid");
+      sec.appendChild(buildWidget(cid, {
+        section: true, host: sec, label: "Notes on this theme overall", placeholder: "Priorities within this theme, anything the findings missed, or 'looks right, proceed'."
+      }));
+    });
+    updateProgress();
+  });
+})();
+</script>
+</body>
+</html>

@@ -168,6 +168,16 @@ review" proposals: pre-filled decision + note, NOT counted as answered until the
 (confirming converts it to their answer). At harvest, a suggestion the user never confirmed is
 a proposal, not a decision — surface unconfirmed ones separately.
 
+**Commit mode** — when the user explicitly says to commit the calls ("do them all, I'll review
+after"): write into `comments.json` directly, with strict provenance and strict limits. Fill
+ONLY empty `text` fields on the user's answered cards (`noteVia: "ai"`, their decision
+untouched, note written to be consistent with it); add a decision only where the user wrote a
+comment but picked none (`decisionVia: "ai"`); save remaining unanswered proposals as full
+answers (`via: "ai-prefill"`). Cards the user marked Later or Skip are never touched. Cross-
+reference batches in the notes ("ship with s8-f1") so the eventual fix plan falls out of the
+comments. Harvest reports every `via`/`noteVia` marker so AI-authored content stays
+distinguishable from the user's own words forever.
+
 Leave the server running — the user reviews on their own schedule, possibly across sessions.
 
 ## Resuming a run (fresh session)

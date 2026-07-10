@@ -33,6 +33,34 @@ an ask ("audit billing for data integrity"), map it to types/dimensions and proc
 offer the bundles (full-ux / pre-launch / health) plus the à-la-carte type list — one question,
 then go. Create the run dir.
 
+## 1.5 Reconcile prior runs (cross-audit memory)
+
+Before surveying ground any prior run covered, build the cross-run ledger:
+
+```
+node <skill-base>/scripts/prior-ledger.mjs <repo-root>/.reviews
+```
+
+It joins every prior finding to the user's decision on it. The decisions are commitments —
+honor them in the new run:
+
+- **fix-now / batch / spec** — queued for fixing. Add a dedicated `verify-prior` dimension to
+  the workflow that checks each against current code: **fixed** → list in a compact, non-answerable
+  "Resolved since last audit" strip (wins deserve visibility); **still open** → resurface as a
+  card with provenance and the prior decision quoted.
+- **later** — re-verify; if still present, carry forward as a normal answerable card with
+  provenance. The user re-decides — "later" may have arrived.
+- **skip** — respect it. Never resurface as a new finding; re-verify cheaply and list
+  skipped-and-still-present items in a one-line-each appendix (so nothing silently vanishes).
+  Promote back to a card ONLY if the situation materially changed (worse, or new blast radius) —
+  and say why.
+- **unanswered / discuss** — carry forward with provenance and any companion-thread context.
+
+Feed the finder preamble a digest of ledger titles+files with: "these are already known — do
+not re-report them as new findings; the verify-prior dimension owns their status." Carried
+cards keep a `carriedFrom: { run, cid }` field in findings.json so decisions chain across runs,
+and render a provenance line (see the markup reference).
+
 ## 2. Run the finder workflow
 
 Assemble a shared **preamble** for every finder: a one-paragraph description of the audited app

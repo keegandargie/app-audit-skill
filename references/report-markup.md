@@ -41,6 +41,17 @@ bar, and the comment/triage widgets. The template JS injects a triage+comment wi
 </div>
 ```
 
+## Provenance line (carried-forward findings)
+
+A card that reappears from a prior run adds a second `.where` line directly under the first:
+
+```html
+<p class="where">↩ carried from 2026-07-10-ux · prior call: Later — "batch with the money fixes"</p>
+```
+
+Quote the user's prior comment verbatim when there is one. "Resolved since last audit" items are
+NOT cards — list them as `.arow` entries (they need no answer, only visibility).
+
 ## Evidence figure (screenshots)
 
 ```html

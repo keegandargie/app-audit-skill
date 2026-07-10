@@ -123,6 +123,21 @@ never touched.
 
 Leave the server running — the user reviews on their own schedule, possibly across sessions.
 
+## Resuming a run (fresh session)
+
+Everything lives in the run dir — a new session needs zero context beyond it. When the user asks
+to continue/reopen an audit ("pick the audit back up", "reopen the report", "harvest my answers"):
+
+1. Find the run: `ls <repo-root>/.reviews/` (newest dir, or the one the user names). `comments.json`
+   tells you how far triage got; `findings.json` + `content.html` are the full substance.
+2. Restart the server (it dies with the session that started it; nothing else does):
+   `node <skill-base>/scripts/serve-report.mjs <run-dir>` — hand back the printed URL. Answers,
+   companion threads, and card patches all rehydrate from disk; the progress bar picks up where
+   it left off.
+3. Companion threads resume too: the broker `--resume`s each card's stored CLI session, and falls
+   back to a transcript recap automatically if a session id has expired.
+4. If the user is done answering, skip the server and go straight to Harvest below.
+
 ## 6. Harvest (when the user says they're done — or a later session resumes)
 
 Read `comments.json` and join to `findings.json` by cid (`sec:*` keys are section-level notes,
